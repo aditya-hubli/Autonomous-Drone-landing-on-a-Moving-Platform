@@ -1,0 +1,108 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="mars_world">
+
+    <!-- Physics -->
+    <physics type="ode">
+      <max_step_size>0.002</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+      <real_time_update_rate>500</real_time_update_rate>
+    </physics>
+
+    <!-- Lighting -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <!-- Ground plane -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <!-- Models spawned separately via spawn_entity -->
+
+    <!--
+      Invisible arena walls: 6m x 6m (±3m from origin).
+      Collision-only (no visual) — physically impassable but unseen.
+      Walls are 0.1m thick, 1m tall, centered at z=0.5.
+    -->
+
+    <!-- North wall (+Y) -->
+    <model name="wall_north">
+      <static>true</static>
+      <pose>0 3.05 0.5 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>6.2 0.1 1.0</size></box></geometry>
+        </collision>
+      </link>
+    </model>
+
+    <!-- South wall (-Y) -->
+    <model name="wall_south">
+      <static>true</static>
+      <pose>0 -3.05 0.5 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>6.2 0.1 1.0</size></box></geometry>
+        </collision>
+      </link>
+    </model>
+
+    <!-- East wall (+X) -->
+    <model name="wall_east">
+      <static>true</static>
+      <pose>3.05 0 0.5 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>0.1 6.2 1.0</size></box></geometry>
+        </collision>
+      </link>
+    </model>
+
+    <!-- West wall (-X) -->
+    <model name="wall_west">
+      <static>true</static>
+      <pose>-3.05 0 0.5 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>0.1 6.2 1.0</size></box></geometry>
+        </collision>
+      </link>
+    </model>
+
+    <!--
+      Corridor walls along X-axis.
+      Platform is 1.0m wide, so walls at Y=±0.8m give 0.3m clearance each side.
+      Walls are 8m long, 0.1m thick, 0.5m tall, collision-only.
+    -->
+    <model name="corridor_north">
+      <static>true</static>
+      <pose>0 0.8 0.25 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>8.0 0.1 0.5</size></box></geometry>
+        </collision>
+      </link>
+    </model>
+
+    <model name="corridor_south">
+      <static>true</static>
+      <pose>0 -0.8 0.25 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>8.0 0.1 0.5</size></box></geometry>
+        </collision>
+      </link>
+    </model>
+
+    <!-- Camera view -->
+    <gui fullscreen='0'>
+      <camera name='user_camera'>
+        <pose>-5 -5 10 0 0.7 0.785</pose>
+        <view_controller>orbit</view_controller>
+      </camera>
+    </gui>
+
+  </world>
+</sdf>

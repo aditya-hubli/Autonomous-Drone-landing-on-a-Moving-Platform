@@ -1,0 +1,5 @@
+# Simulation parameters
+simulation:
+  drone_start_height: 3.0
+  platform_start_x: 2.0
+  platform_start_y: 0.0

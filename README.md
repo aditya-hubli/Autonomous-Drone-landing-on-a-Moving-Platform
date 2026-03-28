@@ -2,7 +2,7 @@
 
 A ROS 2 / Gazebo simulation of a quadrotor drone that autonomously detects, tracks, and lands on a moving ground platform. The drone uses a perception-tracking-control pipeline to follow a randomly moving platform and execute a multi-stage precision landing.
 
-https://github.com/user-attachments/assets/video.mp4
+https://github.com/aditya-hubli/Autonomous-Drone-landing-on-a-Moving-Platform/raw/main/video.mp4
 
 > *Demo video showing the drone detecting the platform, tracking its motion, descending, and landing successfully.*
 

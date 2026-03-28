@@ -212,7 +212,3 @@ src/
 ```
 
 ---
-
-## License
-
-MIT

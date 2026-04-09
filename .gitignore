@@ -19,13 +19,6 @@ __pycache__/
 .DS_Store
 Thumbs.db
 
-# Claude Code
-.claude/
-CLAUDE.md
-
-# Project notes (not for repo)
-project.md
-
 # Secrets
 .env
 *.key

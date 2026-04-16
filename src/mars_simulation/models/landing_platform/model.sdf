@@ -30,7 +30,7 @@
         </surface>
       </collision>
 
-      <!-- Bright green platform - tall enough to be visible from camera -->
+      <!-- Platform body - bright green -->
       <visual name="platform_visual">
         <geometry>
           <box><size>1.0 1.0 0.3</size></box>
@@ -40,6 +40,21 @@
           <diffuse>0.0 1.0 0.0 1</diffuse>
           <specular>0.0 0.3 0.0 1</specular>
           <emissive>0.0 0.4 0.0 1</emissive>
+        </material>
+      </visual>
+
+      <!-- Top face with 4 ArUco markers texture -->
+      <visual name="marker_top">
+        <pose>0 0 0.151 0 0 0</pose>
+        <geometry>
+          <box><size>0.98 0.98 0.001</size></box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://landing_platform/materials/scripts</uri>
+            <uri>model://landing_platform/materials/textures</uri>
+            <name>PlatformTop</name>
+          </script>
         </material>
       </visual>
     </link>

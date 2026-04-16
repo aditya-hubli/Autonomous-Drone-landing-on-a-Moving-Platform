@@ -10,8 +10,8 @@ def generate_launch_description():
             name='platform_mover',
             output='screen',
             parameters=[{
-                'motion_type': 'random_walk',
-                'max_speed': 0.4,
+                'max_speed': 0.5,
+                'boundary': 2.5,
             }],
         ),
     ])

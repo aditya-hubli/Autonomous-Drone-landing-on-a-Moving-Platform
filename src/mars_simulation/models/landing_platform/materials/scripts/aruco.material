@@ -1,4 +1,4 @@
-material ArUcoMarker
+material PlatformTop
 {
   technique
   {
@@ -6,7 +6,7 @@ material ArUcoMarker
     {
       texture_unit
       {
-        texture aruco_marker.png
+        texture platform_top.png
       }
     }
   }

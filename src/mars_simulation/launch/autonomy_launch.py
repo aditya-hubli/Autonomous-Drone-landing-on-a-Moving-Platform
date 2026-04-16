@@ -14,8 +14,8 @@ def generate_launch_description():
         name='platform_mover',
         output='screen',
         parameters=[{
-            'motion_type': 'random_walk',
-            'max_speed': 0.4,
+            'max_speed': 0.5,
+            'boundary': 2.5,
         }],
     )
 
@@ -58,10 +58,10 @@ def generate_launch_description():
                 name='drone_controller',
                 output='screen',
                 parameters=[{
-                    'hover_height': 3.0,
-                    'approach_height': 2.0,
-                    'descend_speed': 0.3,
-                    'land_height': 0.3,
+                    'overview_height': 5.0,
+                    'descend_speed': 0.4,
+                    'land_height': 0.55,
+                    'xy_tolerance': 0.2,
                 }],
             ),
         ],

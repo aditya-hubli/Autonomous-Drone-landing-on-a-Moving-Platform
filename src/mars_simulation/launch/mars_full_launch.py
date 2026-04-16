@@ -1,7 +1,8 @@
 """
 Single launch file for the entire MARS project.
 
-Launches Gazebo with factory plugin, spawns models, then starts all autonomy nodes.
+Launches Gazebo with factory plugin, spawns models, starts all autonomy nodes,
+and opens RViz with the drone camera feed.
 Usage: ros2 launch mars_simulation mars_full_launch.py
 """
 
@@ -20,11 +21,12 @@ def generate_launch_description():
     models_path = os.path.join(pkg_mars_sim, 'models')
     install_lib = os.path.join(pkg_mars_sim, '..', '..', 'lib')
     world_file = os.path.join(pkg_mars_sim, 'worlds', 'mars_world.world')
+    rviz_config = os.path.join(pkg_mars_sim, 'config', 'mars_rviz.rviz')
 
     drone_sdf = os.path.join(models_path, 'mars_drone', 'model.sdf')
     platform_sdf = os.path.join(models_path, 'landing_platform', 'model.sdf')
 
-    # ── Environment ──
+    # -- Environment --
     gazebo_model_path = SetEnvironmentVariable(
         'GAZEBO_MODEL_PATH',
         models_path + ':' + os.environ.get('GAZEBO_MODEL_PATH', ''))
@@ -32,14 +34,14 @@ def generate_launch_description():
         'GAZEBO_PLUGIN_PATH',
         install_lib + ':/opt/ros/humble/lib:' + os.environ.get('GAZEBO_PLUGIN_PATH', ''))
 
-    # ── 0. Kill any stale Gazebo processes ──
+    # -- 0. Kill any stale Gazebo processes --
     kill_gazebo = ExecuteProcess(
         cmd=['bash', '-c',
              'killall -9 gzserver gzclient gazebo 2>/dev/null; sleep 1; echo "Cleared old Gazebo"'],
         output='screen',
     )
 
-    # ── 1. Gazebo (2s after cleanup) ──
+    # -- 1. Gazebo (2s after cleanup) --
     gazebo = TimerAction(
         period=2.0,
         actions=[
@@ -51,11 +53,11 @@ def generate_launch_description():
         ],
     )
 
-    # ── 2. Spawn Platform FIRST (8s) — must exist before drone camera initializes ──
+    # -- 2. Spawn Platform (8s) --
     spawn_platform = TimerAction(
         period=8.0,
         actions=[
-            LogInfo(msg='>>> Spawning landing platform at (2, 0, 0.15)...'),
+            LogInfo(msg='>>> Spawning landing platform at (1, 1, 0.15)...'),
             Node(
                 package='gazebo_ros',
                 executable='spawn_entity.py',
@@ -64,17 +66,17 @@ def generate_launch_description():
                 arguments=[
                     '-entity', 'platform',
                     '-file', platform_sdf,
-                    '-x', '2.0', '-y', '0.0', '-z', '0.15',
+                    '-x', '1.0', '-y', '1.0', '-z', '0.15',
                 ],
             ),
         ],
     )
 
-    # ── 3. Spawn Drone AFTER platform (12s) — camera scene includes platform ──
+    # -- 3. Spawn Drone AFTER platform (12s) --
     spawn_drone = TimerAction(
         period=12.0,
         actions=[
-            LogInfo(msg='>>> Spawning drone at (0, 0, 3)...'),
+            LogInfo(msg='>>> Spawning drone at (0, 0, 5) — overview height...'),
             Node(
                 package='gazebo_ros',
                 executable='spawn_entity.py',
@@ -83,17 +85,17 @@ def generate_launch_description():
                 arguments=[
                     '-entity', 'drone',
                     '-file', drone_sdf,
-                    '-x', '0.0', '-y', '0.0', '-z', '3.0',
+                    '-x', '0.0', '-y', '0.0', '-z', '5.0',
                 ],
             ),
         ],
     )
 
-    # ── 4. Platform Mover (15s) ──
+    # -- 4. Platform Mover (15s) --
     platform_mover = TimerAction(
         period=15.0,
         actions=[
-            LogInfo(msg='>>> Starting platform mover (random_walk)...'),
+            LogInfo(msg='>>> Starting platform mover (XY bounce)...'),
             Node(
                 package='mars_platform',
                 executable='platform_mover',
@@ -101,12 +103,13 @@ def generate_launch_description():
                 output='screen',
                 parameters=[{
                     'max_speed': 0.5,
+                    'boundary': 2.5,
                 }],
             ),
         ],
     )
 
-    # ── 5. ArUco Detector (17s) ──
+    # -- 5. ArUco Detector (17s) --
     aruco_detector = TimerAction(
         period=17.0,
         actions=[
@@ -120,7 +123,7 @@ def generate_launch_description():
         ],
     )
 
-    # ── 6. Platform Tracker (18s) ──
+    # -- 6. Platform Tracker (18s) --
     platform_tracker = TimerAction(
         period=18.0,
         actions=[
@@ -134,7 +137,7 @@ def generate_launch_description():
         ],
     )
 
-    # ── 7. Drone Controller (19s) ──
+    # -- 7. Drone Controller (19s) --
     drone_controller = TimerAction(
         period=19.0,
         actions=[
@@ -145,11 +148,26 @@ def generate_launch_description():
                 name='drone_controller',
                 output='screen',
                 parameters=[{
-                    'hover_height': 3.0,
-                    'approach_height': 2.0,
-                    'descend_speed': 0.8,
+                    'overview_height': 5.0,
+                    'descend_speed': 0.4,
                     'land_height': 0.55,
+                    'xy_tolerance': 0.2,
                 }],
+            ),
+        ],
+    )
+
+    # -- 8. RViz with camera feed (20s) --
+    rviz = TimerAction(
+        period=20.0,
+        actions=[
+            LogInfo(msg='>>> Starting RViz with drone camera feed...'),
+            Node(
+                package='rviz2',
+                executable='rviz2',
+                name='rviz2',
+                output='screen',
+                arguments=['-d', rviz_config],
             ),
         ],
     )
@@ -165,4 +183,5 @@ def generate_launch_description():
         aruco_detector,
         platform_tracker,
         drone_controller,
+        rviz,
     ])

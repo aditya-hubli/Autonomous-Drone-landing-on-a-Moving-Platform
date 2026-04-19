@@ -15,14 +15,13 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
-from std_msgs.msg import String
 
 
 class PlatformMover(Node):
     def __init__(self):
         super().__init__('platform_mover')
 
-        self.declare_parameter('max_speed', 0.15)
+        self.declare_parameter('max_speed', 0.6)
         self.declare_parameter('boundary', 2.5)
 
         self.max_speed = self.get_parameter('max_speed').value
@@ -31,9 +30,10 @@ class PlatformMover(Node):
         self.cmd_pub = self.create_publisher(Twist, '/platform/cmd_vel', 10)
         self.odom_sub = self.create_subscription(
             Odometry, '/platform/odom', self.odom_callback, 10)
-        self.mission_sub = self.create_subscription(
-            String, '/mission/state', self.mission_callback, 10)
+        self.drone_odom_sub = self.create_subscription(
+            Odometry, '/drone/odom', self.drone_odom_callback, 10)
         self.stopped = False
+        self.drone_z = float('inf')
 
         self.pos_x = 0.0
         self.pos_y = 0.0
@@ -64,15 +64,15 @@ class PlatformMover(Node):
         cosy = 1.0 - 2.0 * (q.y * q.y + q.z * q.z)
         self.yaw = math.atan2(siny, cosy)
 
-    def mission_callback(self, msg):
-        if msg.data == 'LANDED' and not self.stopped:
+    def drone_odom_callback(self, msg):
+        self.drone_z = msg.pose.pose.position.z
+        if self.drone_z < 0.6 and not self.stopped:
             self.stopped = True
             self.cmd_pub.publish(Twist())
-            self.get_logger().info('Drone landed — platform stopping.')
+            self.get_logger().info('Drone very close — platform stopped.')
 
     def move_callback(self):
         if self.stopped:
-            self.cmd_pub.publish(Twist())
             return
 
         # Wall rebounds: reflect the velocity component perpendicular to the wall

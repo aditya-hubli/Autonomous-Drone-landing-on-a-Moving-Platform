@@ -10,9 +10,10 @@ import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import (
-    ExecuteProcess, SetEnvironmentVariable,
+    DeclareLaunchArgument, ExecuteProcess, SetEnvironmentVariable,
     TimerAction, LogInfo
 )
+from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
 
@@ -33,6 +34,15 @@ def generate_launch_description():
     gazebo_plugin_path = SetEnvironmentVariable(
         'GAZEBO_PLUGIN_PATH',
         install_lib + ':/opt/ros/humble/lib:' + os.environ.get('GAZEBO_PLUGIN_PATH', ''))
+
+    camera_topic_arg = DeclareLaunchArgument(
+        'camera_topic',
+        default_value='/drone/camera/image_raw',
+        description='Camera image topic for the platform tracker')
+    camera_frame_arg = DeclareLaunchArgument(
+        'camera_frame',
+        default_value='drone/camera_link',
+        description='Frame ID of the camera topic')
 
     # -- 0. Kill any stale Gazebo processes --
     kill_gazebo = ExecuteProcess(
@@ -91,9 +101,24 @@ def generate_launch_description():
         ],
     )
 
-    # -- 4. Platform Mover (15s) --
-    platform_mover = TimerAction(
+    # -- 4. Static camera transform (15s) --
+    camera_tf = TimerAction(
         period=15.0,
+        actions=[
+            LogInfo(msg='>>> Starting static camera transform...'),
+            Node(
+                package='tf2_ros',
+                executable='static_transform_publisher',
+                name='camera_static_tf',
+                output='screen',
+                arguments=['0', '0', '-0.06', '0', '0.7071068', '0', '0.7071068', 'drone/base_link', 'drone/camera_link'],
+            ),
+        ],
+    )
+
+    # -- 5. Platform Mover (20s) --
+    platform_mover = TimerAction(
+        period=20.0,
         actions=[
             LogInfo(msg='>>> Starting platform mover (XY bounce)...'),
             Node(
@@ -102,28 +127,14 @@ def generate_launch_description():
                 name='platform_mover',
                 output='screen',
                 parameters=[{
-                    'max_speed': 0.5,
+                    'max_speed': 0.6,
                     'boundary': 2.5,
                 }],
             ),
         ],
     )
 
-    # -- 5. ArUco Detector (17s) --
-    aruco_detector = TimerAction(
-        period=17.0,
-        actions=[
-            LogInfo(msg='>>> Starting ArUco detector...'),
-            Node(
-                package='mars_perception',
-                executable='aruco_detector',
-                name='aruco_detector',
-                output='screen',
-            ),
-        ],
-    )
-
-    # -- 6. Platform Tracker (18s) --
+    # -- 5. Platform Tracker (18s) --
     platform_tracker = TimerAction(
         period=18.0,
         actions=[
@@ -133,6 +144,10 @@ def generate_launch_description():
                 executable='platform_tracker',
                 name='platform_tracker',
                 output='screen',
+                parameters=[{
+                    'camera_topic': LaunchConfiguration('camera_topic'),
+                    'camera_frame': LaunchConfiguration('camera_frame'),
+                }],
             ),
         ],
     )
@@ -179,9 +194,11 @@ def generate_launch_description():
         gazebo,
         spawn_platform,
         spawn_drone,
+        camera_tf,
         platform_mover,
-        aruco_detector,
         platform_tracker,
         drone_controller,
         rviz,
+        camera_topic_arg,
+        camera_frame_arg,
     ])

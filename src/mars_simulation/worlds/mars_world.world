@@ -71,31 +71,6 @@
       </link>
     </model>
 
-    <!--
-      Corridor walls along X-axis.
-      Platform is 1.0m wide, so walls at Y=±0.8m give 0.3m clearance each side.
-      Walls are 8m long, 0.1m thick, 0.5m tall, collision-only.
-    -->
-    <model name="corridor_north">
-      <static>true</static>
-      <pose>0 0.8 0.25 0 0 0</pose>
-      <link name="link">
-        <collision name="collision">
-          <geometry><box><size>8.0 0.1 0.5</size></box></geometry>
-        </collision>
-      </link>
-    </model>
-
-    <model name="corridor_south">
-      <static>true</static>
-      <pose>0 -0.8 0.25 0 0 0</pose>
-      <link name="link">
-        <collision name="collision">
-          <geometry><box><size>8.0 0.1 0.5</size></box></geometry>
-        </collision>
-      </link>
-    </model>
-
     <!-- Camera view -->
     <gui fullscreen='0'>
       <camera name='user_camera'>

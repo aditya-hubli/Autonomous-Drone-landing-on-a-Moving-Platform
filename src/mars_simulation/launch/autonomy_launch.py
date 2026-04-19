@@ -7,6 +7,15 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
 
+    # Static transform from base_link to camera_link for the downward-facing camera
+    camera_tf = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='camera_static_tf',
+        output='screen',
+        arguments=['0', '0', '-0.06', '0', '0.7071068', '0', '0.7071068', 'drone/base_link', 'drone/camera_link'],
+    )
+
     # Platform mover — start immediately
     platform_mover = Node(
         package='mars_platform',
@@ -14,23 +23,9 @@ def generate_launch_description():
         name='platform_mover',
         output='screen',
         parameters=[{
-            'motion_type': 'random_walk',
-            'max_speed': 0.4,
+            'max_speed': 0.6,
+            'boundary': 2.5,
         }],
-    )
-
-    # ArUco detector — 1s delay
-    aruco_detector = TimerAction(
-        period=1.0,
-        actions=[
-            LogInfo(msg='>>> Starting ArUco detector...'),
-            Node(
-                package='mars_perception',
-                executable='aruco_detector',
-                name='aruco_detector',
-                output='screen',
-            ),
-        ],
     )
 
     # Platform tracker — 2s delay
@@ -58,10 +53,10 @@ def generate_launch_description():
                 name='drone_controller',
                 output='screen',
                 parameters=[{
-                    'hover_height': 3.0,
-                    'approach_height': 2.0,
-                    'descend_speed': 0.3,
-                    'land_height': 0.3,
+                    'overview_height': 5.0,
+                    'descend_speed': 0.4,
+                    'land_height': 0.55,
+                    'xy_tolerance': 0.2,
                 }],
             ),
         ],
@@ -70,7 +65,7 @@ def generate_launch_description():
     return LaunchDescription([
         LogInfo(msg='>>> Starting platform mover...'),
         platform_mover,
-        aruco_detector,
+        camera_tf,
         platform_tracker,
         drone_controller,
     ])
